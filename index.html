@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Registro de Ubicación</title>
     <style>
         :root { 
@@ -14,56 +14,60 @@
         }
         
         body { 
-            font-family: 'Segoe UI', sans-serif; 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
             background-color: #f8fafc; 
             color: #1e293b;
             display: flex; 
             justify-content: center; 
-            padding: 30px; 
+            padding: 10px; 
             margin: 0;
         }
 
         .card { 
             background: var(--blanco); 
-            padding: 2.5rem; 
+            padding: 1.25rem; 
             border-radius: 15px; 
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05); 
             width: 100%; 
             max-width: 550px;
             border: 1px solid var(--gris-borde);
+            box-sizing: border-box;
         }
         
         .header { 
             display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-bottom: 25px; 
+            justify-content: center; 
+            margin-bottom: 20px; 
             border-bottom: 2px solid var(--azul-claro); 
-            padding-bottom: 15px; 
+            padding-bottom: 10px; 
         }
         
-        h2 { color: var(--azul-fuerte); margin: 0; font-size: 1.6rem; letter-spacing: -0.5px; }
+        h2 { color: var(--azul-fuerte); margin: 0; font-size: 1.4rem; letter-spacing: -0.5px; }
         
-        .row { display: flex; gap: 15px; margin-bottom: 20px; }
-        .input-group { flex: 1; }
+        .row { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+            margin-bottom: 15px; 
+        }
         
         label { 
             display: block; 
             font-size: 0.75rem; 
             font-weight: 700; 
-            margin-bottom: 6px; 
+            margin-bottom: 5px; 
             color: var(--azul-medio); 
             text-transform: uppercase; 
         }
         
         input { 
             width: 100%; 
-            padding: 12px; 
+            padding: 14px; 
             border: 2px solid var(--gris-borde); 
             border-radius: 10px; 
             box-sizing: border-box; 
             transition: all 0.3s ease; 
-            font-size: 1rem;
+            font-size: 16px; /* Evita zoom automático en móviles */
             text-transform: uppercase;
         }
         
@@ -73,53 +77,68 @@
             box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
         }
         
-        .actions-top { display: flex; gap: 10px; margin-bottom: 20px; }
+        .actions-top { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 20px; 
+        }
         
         .btn {
             border: none;
-            padding: 12px 15px;
-            border-radius: 8px;
+            padding: 14px 10px;
+            border-radius: 10px;
             cursor: pointer;
             font-weight: bold;
             font-size: 0.85rem;
             transition: all 0.2s;
+            touch-action: manipulation;
         }
 
         .btn-copy { background: var(--azul-medio); color: white; flex: 2; }
-        .btn-copy:hover { background: var(--azul-fuerte); transform: translateY(-1px); }
-
         .btn-clear { 
-            background: var(--blanco); 
-            color: #94a3b8; 
-            border: 1px solid #cbd5e1;
+            background: #ffffff; 
+            color: #ef4444; 
+            border: 1px solid #fecaca;
             flex: 1;
         }
-        .btn-clear:hover { background: #fef2f2; color: #ef4444; border-color: #fecaca; }
 
-        table { width: 100%; margin-top: 10px; border-collapse: collapse; }
-        th { text-align: left; font-size: 0.8rem; color: var(--azul-medio); border-bottom: 2px solid var(--azul-claro); padding: 12px; }
-        td { padding: 14px 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; }
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table { width: 100%; margin-top: 10px; border-collapse: collapse; min-width: 300px; }
+        th { text-align: left; font-size: 0.75rem; color: var(--azul-medio); border-bottom: 2px solid var(--azul-claro); padding: 10px; }
+        td { padding: 12px 10px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; }
         
         .btn-delete-row { 
             background: #fee2e2; 
             color: #ef4444; 
             border: none; 
-            padding: 6px 12px; 
+            padding: 8px 12px; 
             border-radius: 6px; 
             font-size: 0.75rem; 
             font-weight: bold;
-            cursor: pointer; 
+            cursor: pointer;
         }
-        .btn-delete-row:hover { background: #ef4444; color: white; }
         
         .hint { 
-            font-size: 0.75rem; 
+            font-size: 0.7rem; 
             color: var(--azul-medio); 
             text-align: center; 
             margin-top: 20px; 
             background: var(--azul-claro);
-            padding: 8px;
+            padding: 10px;
             border-radius: 8px;
+        }
+
+        /* Escritorio */
+        @media (min-width: 480px) {
+            .row { flex-direction: row; }
+            body { padding: 30px; }
+            .card { padding: 2rem; }
+            h2 { font-size: 1.6rem; }
         }
     </style>
 </head>
@@ -142,26 +161,27 @@
     </div>
 
     <div class="actions-top">
-        <button class="btn btn-copy" id="btnCopiar">📋 COPIAR TABLA</button>
-        <button class="btn btn-clear" id="btnLimpiar">LIMPIAR NUBE</button>
+        <button class="btn btn-copy" id="btnCopiar">📋 COPIAR TODO</button>
+        <button class="btn btn-clear" id="btnLimpiar">LIMPIAR</button>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>CÓDIGO</th>
-                <th>POSICIÓN</th>
-                <th style="text-align: right;">ACCIÓN</th>
-            </tr>
-        </thead>
-        <tbody id="tablaBody"></tbody>
-    </table>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>CÓDIGO</th>
+                    <th>POSICIÓN</th>
+                    <th style="text-align: right;">ACCIÓN</th>
+                </tr>
+            </thead>
+            <tbody id="tablaBody"></tbody>
+        </table>
+    </div>
 
-    <div class="hint">📱 Los cambios se reflejan en todas las pantallas al instante</div>
+    <div class="hint">📱 Los cambios se sincronizan en tiempo real</div>
 </div>
 
 <script type="module">
-    // Importación de Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { 
         getFirestore, 
@@ -176,7 +196,6 @@
         writeBatch 
     } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // Configuración con tus credenciales
     const firebaseConfig = {
         apiKey: "AIzaSyBDTUUcNv0YYEE0U_TqpyEAuqn9TV9kFqo",
         authDomain: "ubicaciones-6afcd.firebaseapp.com",
@@ -186,7 +205,6 @@
         appId: "1:982728208217:web:1a9acb828f73d1b0bc2648"
     };
 
-    // Inicializar Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const inventarioCol = collection(db, "registros");
@@ -196,7 +214,6 @@
     const tablaBody = document.getElementById('tablaBody');
     let registrosActuales = [];
 
-    // --- ESCUCHAR CAMBIOS EN TIEMPO REAL ---
     const q = query(inventarioCol, orderBy("timestamp", "desc"));
     onSnapshot(q, (snapshot) => {
         registrosActuales = [];
@@ -219,7 +236,6 @@
         });
     });
 
-    // --- FUNCIÓN REGISTRAR ---
     async function registrar() {
         const cod = inputCod.value.trim().toUpperCase();
         const pos = inputPos.value.trim().toUpperCase();
@@ -235,20 +251,19 @@
                 inputPos.value = '';
                 inputCod.focus();
             } catch (e) {
-                alert("Error al guardar: " + e.message);
+                alert("Error: " + e.message);
             }
         }
     }
 
-    // --- FUNCIONES GLOBALES ---
     window.borrarFila = async (id) => {
-        if(confirm("¿Eliminar este registro de la nube?")) {
+        if(confirm("¿Eliminar este registro?")) {
             await deleteDoc(doc(db, "registros", id));
         }
     };
 
     document.getElementById('btnLimpiar').onclick = async () => {
-        if (registrosActuales.length > 0 && confirm("¿ESTÁS SEGURO? Esto borrará la lista en TODAS las computadoras.")) {
+        if (registrosActuales.length > 0 && confirm("¿Borrar TODA la lista de la nube?")) {
             const snapshot = await getDocs(inventarioCol);
             const batch = writeBatch(db);
             snapshot.docs.forEach((doc) => batch.delete(doc.ref));
@@ -257,19 +272,16 @@
     };
 
     document.getElementById('btnCopiar').onclick = () => {
-        if (registrosActuales.length === 0) return alert("No hay datos.");
-        
+        if (registrosActuales.length === 0) return alert("No hay datos para copiar.");
         let texto = "CÓDIGO\tPOSICIÓN\n";
         registrosActuales.forEach(item => {
-            texto += `${item.cod}\t'${item.pos}\n`;
+            texto += `${item.cod}\t${item.pos}\n`;
         });
-
         navigator.clipboard.writeText(texto).then(() => {
-            alert("📋 Copiado al portapapeles para pegar en Excel.");
+            alert("📋 Tabla copiada.");
         });
     };
 
-    // --- EVENTOS DE NAVEGACIÓN ---
     inputCod.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && inputCod.value.trim() !== "") inputPos.focus();
     });
