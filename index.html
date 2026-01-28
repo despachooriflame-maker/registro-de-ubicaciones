@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Ubicaciones en Red</title>
+    <style>
+        :root { 
+            --azul-fuerte: #1e40af; 
+            --azul-medio: #3b82f6; 
+            --azul-claro: #eff6ff;
+            --blanco: #ffffff;
+            --gris-borde: #e2e8f0;
+        }
+        
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background-color: #f8fafc; 
+            color: #1e293b;
+            display: flex; 
+            justify-content: center; 
+            padding: 30px; 
+            margin: 0;
+        }
+
+        .card { 
+            background: var(--blanco); 
+            padding: 2.5rem; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05); 
+            width: 100%; 
+            max-width: 550px;
+            border: 1px solid var(--gris-borde);
+        }
+        
+        .header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 25px; 
+            border-bottom: 2px solid var(--azul-claro); 
+            padding-bottom: 15px; 
+        }
+        
+        h2 { color: var(--azul-fuerte); margin: 0; font-size: 1.6rem; letter-spacing: -0.5px; }
+        
+        .row { display: flex; gap: 15px; margin-bottom: 20px; }
+        .input-group { flex: 1; }
+        
+        label { 
+            display: block; 
+            font-size: 0.75rem; 
+            font-weight: 700; 
+            margin-bottom: 6px; 
+            color: var(--azul-medio); 
+            text-transform: uppercase; 
+        }
+        
+        input { 
+            width: 100%; 
+            padding: 12px; 
+            border: 2px solid var(--gris-borde); 
+            border-radius: 10px; 
+            box-sizing: border-box; 
+            transition: all 0.3s ease; 
+            font-size: 1rem;
+            text-transform: uppercase;
+        }
+        
+        input:focus { 
+            border-color: var(--azul-medio); 
+            outline: none; 
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+        
+        .actions-top { display: flex; gap: 10px; margin-bottom: 20px; }
+        
+        .btn {
+            border: none;
+            padding: 12px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .btn-copy { background: var(--azul-medio); color: white; flex: 2; }
+        .btn-copy:hover { background: var(--azul-fuerte); transform: translateY(-1px); }
+
+        .btn-clear { 
+            background: var(--blanco); 
+            color: #94a3b8; 
+            border: 1px solid #cbd5e1;
+            flex: 1;
+        }
+        .btn-clear:hover { background: #fef2f2; color: #ef4444; border-color: #fecaca; }
+
+        table { width: 100%; margin-top: 10px; border-collapse: collapse; }
+        th { text-align: left; font-size: 0.8rem; color: var(--azul-medio); border-bottom: 2px solid var(--azul-claro); padding: 12px; }
+        td { padding: 14px 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; }
+        
+        .btn-delete-row { 
+            background: #fee2e2; 
+            color: #ef4444; 
+            border: none; 
+            padding: 6px 12px; 
+            border-radius: 6px; 
+            font-size: 0.75rem; 
+            font-weight: bold;
+            cursor: pointer; 
+        }
+        .btn-delete-row:hover { background: #ef4444; color: white; }
+        
+        .hint { 
+            font-size: 0.75rem; 
+            color: var(--azul-medio); 
+            text-align: center; 
+            margin-top: 20px; 
+            background: var(--azul-claro);
+            padding: 8px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="header">
+        <h2>Registro en la Nube ☁️</h2>
+    </div>
+    
+    <div class="row">
+        <div class="input-group">
+            <label>1. Código</label>
+            <input type="text" id="codigo" placeholder="Escribir..." autocomplete="off">
+        </div>
+        <div class="input-group">
+            <label>2. Posición</label>
+            <input type="text" id="posicion" placeholder="Ubicación..." autocomplete="off">
+        </div>
+    </div>
+
+    <div class="actions-top">
+        <button class="btn btn-copy" id="btnCopiar">📋 COPIAR TABLA</button>
+        <button class="btn btn-clear" id="btnLimpiar">LIMPIAR NUBE</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>CÓDIGO</th>
+                <th>POSICIÓN</th>
+                <th style="text-align: right;">ACCIÓN</th>
+            </tr>
+        </thead>
+        <tbody id="tablaBody"></tbody>
+    </table>
+
+    <div class="hint">📱 Los cambios se reflejan en todas las pantallas al instante</div>
+</div>
+
+<script type="module">
+    // Importación de Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { 
+        getFirestore, 
+        collection, 
+        addDoc, 
+        onSnapshot, 
+        deleteDoc, 
+        doc, 
+        query, 
+        orderBy, 
+        getDocs, 
+        writeBatch 
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    // Configuración con tus credenciales
+    const firebaseConfig = {
+        apiKey: "AIzaSyBDTUUcNv0YYEE0U_TqpyEAuqn9TV9kFqo",
+        authDomain: "ubicaciones-6afcd.firebaseapp.com",
+        projectId: "ubicaciones-6afcd",
+        storageBucket: "ubicaciones-6afcd.firebasestorage.app",
+        messagingSenderId: "982728208217",
+        appId: "1:982728208217:web:1a9acb828f73d1b0bc2648"
+    };
+
+    // Inicializar Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const inventarioCol = collection(db, "registros");
+
+    const inputCod = document.getElementById('codigo');
+    const inputPos = document.getElementById('posicion');
+    const tablaBody = document.getElementById('tablaBody');
+    let registrosActuales = [];
+
+    // --- ESCUCHAR CAMBIOS EN TIEMPO REAL ---
+    const q = query(inventarioCol, orderBy("timestamp", "desc"));
+    onSnapshot(q, (snapshot) => {
+        registrosActuales = [];
+        tablaBody.innerHTML = '';
+        
+        snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const id = docSnap.id;
+            registrosActuales.push({ ...data, id });
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${data.cod}</strong></td>
+                <td>${data.pos}</td>
+                <td style="text-align: right;">
+                    <button class="btn-delete-row" onclick="borrarFila('${id}')">Borrar</button>
+                </td>
+            `;
+            tablaBody.appendChild(tr);
+        });
+    });
+
+    // --- FUNCIÓN REGISTRAR ---
+    async function registrar() {
+        const cod = inputCod.value.trim().toUpperCase();
+        const pos = inputPos.value.trim().toUpperCase();
+
+        if (cod && pos) {
+            try {
+                await addDoc(inventarioCol, {
+                    cod,
+                    pos,
+                    timestamp: Date.now()
+                });
+                inputCod.value = '';
+                inputPos.value = '';
+                inputCod.focus();
+            } catch (e) {
+                alert("Error al guardar: " + e.message);
+            }
+        }
+    }
+
+    // --- FUNCIONES GLOBALES ---
+    window.borrarFila = async (id) => {
+        if(confirm("¿Eliminar este registro de la nube?")) {
+            await deleteDoc(doc(db, "registros", id));
+        }
+    };
+
+    document.getElementById('btnLimpiar').onclick = async () => {
+        if (registrosActuales.length > 0 && confirm("¿ESTÁS SEGURO? Esto borrará la lista en TODAS las computadoras.")) {
+            const snapshot = await getDocs(inventarioCol);
+            const batch = writeBatch(db);
+            snapshot.docs.forEach((doc) => batch.delete(doc.ref));
+            await batch.commit();
+        }
+    };
+
+    document.getElementById('btnCopiar').onclick = () => {
+        if (registrosActuales.length === 0) return alert("No hay datos.");
+        
+        let texto = "CÓDIGO\tPOSICIÓN\n";
+        registrosActuales.forEach(item => {
+            texto += `${item.cod}\t'${item.pos}\n`;
+        });
+
+        navigator.clipboard.writeText(texto).then(() => {
+            alert("📋 Copiado al portapapeles para pegar en Excel.");
+        });
+    };
+
+    // --- EVENTOS DE NAVEGACIÓN ---
+    inputCod.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && inputCod.value.trim() !== "") inputPos.focus();
+    });
+
+    inputPos.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') registrar();
+    });
+
+    window.onload = () => inputCod.focus();
+</script>
+
+</body>
+</html>
