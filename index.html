@@ -29,7 +29,7 @@
             border-radius: 15px; 
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05); 
             width: 100%; 
-            max-width: 550px;
+            max-width: 600px; /* Un poco más ancho para la nueva columna */
             border: 1px solid var(--gris-borde);
             box-sizing: border-box;
         }
@@ -67,7 +67,7 @@
             border-radius: 10px; 
             box-sizing: border-box; 
             transition: all 0.3s ease; 
-            font-size: 16px; /* Evita zoom automático en móviles */
+            font-size: 16px; 
             text-transform: uppercase;
         }
         
@@ -108,9 +108,9 @@
             -webkit-overflow-scrolling: touch;
         }
 
-        table { width: 100%; margin-top: 10px; border-collapse: collapse; min-width: 300px; }
+        table { width: 100%; margin-top: 10px; border-collapse: collapse; min-width: 400px; }
         th { text-align: left; font-size: 0.75rem; color: var(--azul-medio); border-bottom: 2px solid var(--azul-claro); padding: 10px; }
-        td { padding: 12px 10px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; }
+        td { padding: 12px 10px; border-bottom: 1px solid #f1f5f9; font-size: 0.90rem; }
         
         .btn-delete-row { 
             background: #fee2e2; 
@@ -133,7 +133,6 @@
             border-radius: 8px;
         }
 
-        /* Escritorio */
         @media (min-width: 480px) {
             .row { flex-direction: row; }
             body { padding: 30px; }
@@ -146,7 +145,7 @@
 
 <div class="card">
     <div class="header">
-        <h2>Registro de ubicaciones</h2>
+        <h2>📝 Registro de ubicaciones</h2>
     </div>
     
     <div class="row">
@@ -171,6 +170,7 @@
                 <tr>
                     <th>CÓDIGO</th>
                     <th>POSICIÓN</th>
+                    <th>FECHA</th>
                     <th style="text-align: right;">ACCIÓN</th>
                 </tr>
             </thead>
@@ -228,6 +228,7 @@
             tr.innerHTML = `
                 <td><strong>${data.cod}</strong></td>
                 <td>${data.pos}</td>
+                <td style="font-size: 0.8rem; color: #64748b;">${data.fechaStr || '-'}</td>
                 <td style="text-align: right;">
                     <button class="btn-delete-row" onclick="borrarFila('${id}')">Borrar</button>
                 </td>
@@ -239,12 +240,18 @@
     async function registrar() {
         const cod = inputCod.value.trim().toUpperCase();
         const pos = inputPos.value.trim().toUpperCase();
+        
+        // Generar fecha y hora corta (DD/MM HH:MM)
+        const ahora = new Date();
+        const fechaStr = ahora.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' }) + ' ' + 
+                         ahora.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false });
 
         if (cod && pos) {
             try {
                 await addDoc(inventarioCol, {
                     cod,
                     pos,
+                    fechaStr,
                     timestamp: Date.now()
                 });
                 inputCod.value = '';
@@ -273,9 +280,9 @@
 
     document.getElementById('btnCopiar').onclick = () => {
         if (registrosActuales.length === 0) return alert("No hay datos para copiar.");
-        let texto = "CÓDIGO\tPOSICIÓN\n";
+        let texto = "CÓDIGO\tPOSICIÓN\tFECHA\n";
         registrosActuales.forEach(item => {
-            texto += `${item.cod}\t${item.pos}\n`;
+            texto += `${item.cod}\t${item.pos}\t${item.fechaStr || ''}\n`;
         });
         navigator.clipboard.writeText(texto).then(() => {
             alert("📋 Tabla copiada.");
