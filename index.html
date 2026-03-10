@@ -29,7 +29,7 @@
             border-radius: 15px; 
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05); 
             width: 100%; 
-            max-width: 600px; /* Un poco más ancho para la nueva columna */
+            max-width: 600px; 
             border: 1px solid var(--gris-borde);
             box-sizing: border-box;
         }
@@ -151,7 +151,7 @@
     <div class="row">
         <div class="input-group">
             <label>1. Código</label>
-            <input type="text" id="codigo" placeholder="Escribir..." autocomplete="off">
+            <input type="number" inputmode="numeric" id="codigo" placeholder="Escribir..." autocomplete="off">
         </div>
         <div class="input-group">
             <label>2. Posición</label>
@@ -241,7 +241,6 @@
         const cod = inputCod.value.trim().toUpperCase();
         const pos = inputPos.value.trim().toUpperCase();
         
-        // Generar fecha y hora corta (DD/MM HH:MM)
         const ahora = new Date();
         const fechaStr = ahora.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' }) + ' ' + 
                          ahora.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false });
