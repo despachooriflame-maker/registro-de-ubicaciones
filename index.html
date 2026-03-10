@@ -11,6 +11,8 @@
             --azul-claro: #eff6ff;
             --blanco: #ffffff;
             --gris-borde: #e2e8f0;
+            --rojo-error: #ef4444;
+            --amarillo-aviso: #fef08a;
         }
         
         body { 
@@ -133,6 +135,21 @@
             border-radius: 8px;
         }
 
+        .repetido-bg {
+            background-color: var(--amarillo-aviso);
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+        
+        .repetido-tag {
+            display: block;
+            color: var(--rojo-error);
+            font-size: 0.65rem;
+            font-weight: bold;
+            margin-top: 2px;
+            text-transform: uppercase;
+        }
+
         @media (min-width: 480px) {
             .row { flex-direction: row; }
             body { padding: 30px; }
@@ -219,18 +236,26 @@
         registrosActuales = [];
         tablaBody.innerHTML = '';
         
-        snapshot.forEach((docSnap) => {
+        const codigosList = [];
+        snapshot.forEach(docSnap => {
             const data = docSnap.data();
-            const id = docSnap.id;
-            registrosActuales.push({ ...data, id });
+            codigosList.push(data.cod);
+            registrosActuales.push({ ...data, id: docSnap.id });
+        });
+
+        registrosActuales.forEach((data) => {
+            const esRepetido = codigosList.filter(c => c === data.cod).length > 1;
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td><strong>${data.cod}</strong></td>
+                <td>
+                    <strong class="${esRepetido ? 'repetido-bg' : ''}">${data.cod}</strong>
+                    ${esRepetido ? '<span class="repetido-tag">Repetido</span>' : ''}
+                </td>
                 <td>${data.pos}</td>
                 <td style="font-size: 0.8rem; color: #64748b;">${data.fechaStr || '-'}</td>
                 <td style="text-align: right;">
-                    <button class="btn-delete-row" onclick="borrarFila('${id}')">Borrar</button>
+                    <button class="btn-delete-row" onclick="borrarFila('${data.id}')">Borrar</button>
                 </td>
             `;
             tablaBody.appendChild(tr);
@@ -246,6 +271,13 @@
                          ahora.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false });
 
         if (cod && pos) {
+            // Lógica de vibración: verifica si el código ya existe en la lista actual
+            const yaExiste = registrosActuales.some(r => r.cod === cod);
+            if (yaExiste && navigator.vibrate) {
+                // Vibra: 200ms encendido, 100ms apagado, 200ms encendido
+                navigator.vibrate([200, 100, 200]);
+            }
+
             try {
                 await addDoc(inventarioCol, {
                     cod,
@@ -269,7 +301,7 @@
     };
 
     document.getElementById('btnLimpiar').onclick = async () => {
-        if (registrosActuales.length > 0 && confirm("¿Borrar TODA la lista de la nube?")) {
+        if (registrosActuales.length > 0 && confirm("¿Borrar todo el listado?")) {
             const snapshot = await getDocs(inventarioCol);
             const batch = writeBatch(db);
             snapshot.docs.forEach((doc) => batch.delete(doc.ref));
