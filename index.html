@@ -80,7 +80,7 @@
             box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
         }
         
-        /* Estilos para el Menú Flotante Modificado */
+        /* Estilos para el Menú Flotante */
         .floating-menu {
             display: none;
             position: absolute;
@@ -89,7 +89,7 @@
             border-radius: 10px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.15);
             z-index: 1000;
-            width: 300px; /* Ajustado para dos columnas */
+            width: 300px;
             padding: 10px;
         }
 
@@ -300,7 +300,6 @@
     const tablaBody = document.getElementById('tablaBody');
     let registrosActuales = [];
 
-    // --- Funciones del Menú Flotante ---
     inputPos.onclick = (e) => {
         menuUbicaciones.style.display = 'block';
         e.stopPropagation();
@@ -310,7 +309,7 @@
         inputPos.value = valor;
         inputPos.readOnly = true;
         menuUbicaciones.style.display = 'none';
-        registrar(); // Registra automáticamente al seleccionar
+        registrar();
     };
 
     window.activarManual = () => {
@@ -320,11 +319,9 @@
         inputPos.focus();
     };
 
-    // Cerrar menú al hacer clic fuera
     document.addEventListener('click', () => {
         menuUbicaciones.style.display = 'none';
     });
-    // ----------------------------------
 
     const q = query(inventarioCol, orderBy("timestamp", "desc"));
     onSnapshot(q, (snapshot) => {
@@ -380,7 +377,7 @@
                 });
                 inputCod.value = '';
                 inputPos.value = '';
-                inputPos.readOnly = true; 
+                inputPos.readOnly = true;
                 inputCod.focus();
             } catch (e) {
                 alert("Error: " + e.message);
@@ -389,7 +386,10 @@
     }
 
     window.borrarFila = async (id) => {
-        if(confirm("¿Eliminar este registro?")) {
+        const registro = registrosActuales.find(r => r.id === id);
+        const codABorrar = registro ? registro.cod : "";
+
+        if(confirm(`¿Eliminar el código ${codABorrar}?`)) {
             await deleteDoc(doc(db, "registros", id));
         }
     };
