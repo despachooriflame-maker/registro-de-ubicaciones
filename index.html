@@ -80,7 +80,7 @@
             box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
         }
         
-        /* Estilos para el Menú Flotante */
+        /* Estilos para el Menú Flotante Modificado */
         .floating-menu {
             display: none;
             position: absolute;
@@ -89,8 +89,17 @@
             border-radius: 10px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.15);
             z-index: 1000;
-            width: 250px;
+            width: 300px; /* Ajustado para dos columnas */
             padding: 10px;
+        }
+
+        .menu-grid {
+            display: flex;
+            gap: 10px;
+        }
+
+        .menu-col {
+            flex: 1;
         }
 
         .floating-menu button {
@@ -214,16 +223,22 @@
             <input type="text" id="posicion" placeholder="Ubicación..." autocomplete="off" readonly>
             
             <div id="menuUbicaciones" class="floating-menu">
-                <button type="button" onclick="seleccionarPos('T01A')">T01A</button>
-                <button type="button" onclick="seleccionarPos('T01B')">T01B</button>
-                <button type="button" onclick="seleccionarPos('T01C')">T01C</button>
-                <button type="button" onclick="seleccionarPos('T01D')">T01D</button>
-                <button type="button" onclick="seleccionarPos('T01E')">T01E</button>
-                <button type="button" onclick="seleccionarPos('T02A')">T02A</button>
-                <button type="button" onclick="seleccionarPos('T02B')">T02B</button>
-                <button type="button" onclick="seleccionarPos('T02C')">T02C</button>
-                <button type="button" onclick="seleccionarPos('T02D')">T02D</button>
-                <button type="button" onclick="seleccionarPos('T02E')">T02E</button>
+                <div class="menu-grid">
+                    <div class="menu-col">
+                        <button type="button" onclick="seleccionarPos('T01A')">T01A</button>
+                        <button type="button" onclick="seleccionarPos('T01B')">T01B</button>
+                        <button type="button" onclick="seleccionarPos('T01C')">T01C</button>
+                        <button type="button" onclick="seleccionarPos('T01D')">T01D</button>
+                        <button type="button" onclick="seleccionarPos('T01E')">T01E</button>
+                    </div>
+                    <div class="menu-col">
+                        <button type="button" onclick="seleccionarPos('T02A')">T02A</button>
+                        <button type="button" onclick="seleccionarPos('T02B')">T02B</button>
+                        <button type="button" onclick="seleccionarPos('T02C')">T02C</button>
+                        <button type="button" onclick="seleccionarPos('T02D')">T02D</button>
+                        <button type="button" onclick="seleccionarPos('T02E')">T02E</button>
+                    </div>
+                </div>
                 <button type="button" class="btn-manual" onclick="activarManual()">⌨️ INGRESO MANUAL</button>
             </div>
         </div>
@@ -365,7 +380,7 @@
                 });
                 inputCod.value = '';
                 inputPos.value = '';
-                inputPos.readOnly = true; // Resetea a modo selección
+                inputPos.readOnly = true; 
                 inputCod.focus();
             } catch (e) {
                 alert("Error: " + e.message);
@@ -401,7 +416,6 @@
 
     inputCod.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && inputCod.value.trim() !== "") {
-            // Al dar enter en código, abre el menú de posición
             menuUbicaciones.style.display = 'block';
         }
     });
