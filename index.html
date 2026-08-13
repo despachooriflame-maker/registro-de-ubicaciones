@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>📝 Registro de Ubicación</title>
+    <!-- Librería para leer archivos Excel (XLSX) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root { 
             --azul-fuerte: #1e40af; 
@@ -13,6 +15,7 @@
             --gris-borde: #e2e8f0;
             --rojo-error: #ef4444;
             --amarillo-aviso: #fef08a;
+            --verde-exito: #10b981;
         }
         
         body { 
@@ -63,7 +66,7 @@
             text-transform: uppercase; 
         }
         
-        input { 
+        input:not([type="file"]) { 
             width: 100%; 
             padding: 14px; 
             border: 2px solid var(--gris-borde); 
@@ -144,7 +147,8 @@
             touch-action: manipulation;
         }
 
-        .btn-copy { background: var(--azul-medio); color: white; flex: 2; }
+        .btn-copy { background: var(--azul-medio); color: white; flex: 1.5; }
+        .btn-upload { background: var(--verde-exito); color: white; flex: 1.5; }
         .btn-clear { 
             background: #ffffff; 
             color: #ef4444; 
@@ -244,10 +248,13 @@
         </div>
     </div>
 
+    <!-- Se agregó el botón para Excel y un input oculto -->
     <div class="actions-top">
-        <button class="btn btn-copy" id="btnCopiar">📋 COPIAR TABLA</button>
+        <button class="btn btn-copy" id="btnCopiar">📋 COPIAR</button>
+        <button class="btn btn-upload" id="btnSubirBase">📁 Cargar base</button>
         <button class="btn btn-clear" id="btnLimpiar">LIMPIAR</button>
     </div>
+    <input type="file" id="inputFile" accept=".xlsx, .xls" style="display: none;">
 
     <div class="table-container">
         <table>
@@ -278,7 +285,8 @@
         query, 
         orderBy, 
         getDocs, 
-        writeBatch 
+        writeBatch,
+        setDoc // Importado setDoc para guardar la base de Excel
     } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -293,12 +301,25 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const inventarioCol = collection(db, "registros");
+    const baseRef = doc(db, "configuracion", "codigos_validos"); // Documento único que se sobreescribe
 
     const inputCod = document.getElementById('codigo');
     const inputPos = document.getElementById('posicion');
     const menuUbicaciones = document.getElementById('menuUbicaciones');
     const tablaBody = document.getElementById('tablaBody');
+    const inputFile = document.getElementById('inputFile');
+    
     let registrosActuales = [];
+    let codigosBase = []; // Aquí se guardan los códigos válidos en tiempo real
+
+    // Escuchar la base de códigos válidos desde Firebase
+    onSnapshot(baseRef, (docSnap) => {
+        if (docSnap.exists()) {
+            codigosBase = docSnap.data().lista || [];
+        } else {
+            codigosBase = [];
+        }
+    });
 
     inputPos.onclick = (e) => {
         menuUbicaciones.style.display = 'block';
@@ -363,9 +384,20 @@
                          ahora.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false });
 
         if (cod && pos) {
+            // Validación: Si hay códigos en la base y el código escaneado no está en ella
+            if (codigosBase.length > 0 && !codigosBase.includes(cod)) {
+                alertarCodigoNoExiste();
+                inputCod.value = '';
+                inputPos.value = '';
+                inputPos.readOnly = true;
+                inputCod.focus();
+                return; // Se detiene el proceso, no se guarda en la tabla
+            }
+
             const yaExiste = registrosActuales.some(r => r.cod === cod);
-            if (yaExiste && navigator.vibrate) {
-                navigator.vibrate([200, 100, 200]);
+            if (yaExiste) {
+                if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+                alertarCodigoRepetido();
             }
 
             try {
@@ -384,6 +416,50 @@
             }
         }
     }
+
+    // Lógica para procesar el archivo Excel
+    document.getElementById('btnSubirBase').onclick = () => {
+        inputFile.click();
+    };
+
+    inputFile.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            try {
+                const data = new Uint8Array(event.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const primeraHoja = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[primeraHoja];
+                
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+                const nuevosCodigos = [];
+
+                jsonData.forEach(fila => {
+                    // Busca la columna ignorando mayúsculas, minúsculas o espacios extra
+                    const nombreColumna = Object.keys(fila).find(k => k.trim().toLowerCase() === "código producto" || k.trim().toLowerCase() === "codigo producto");
+                    
+                    if (nombreColumna && fila[nombreColumna]) {
+                        nuevosCodigos.push(String(fila[nombreColumna]).trim().toUpperCase());
+                    }
+                });
+
+                if (nuevosCodigos.length > 0) {
+                    // setDoc sobreescribe el documento borrando la data antigua automáticamente
+                    await setDoc(baseRef, { lista: nuevosCodigos });
+                    alert(`✅ Base actualizada. Se cargaron ${nuevosCodigos.length} códigos válidos.`);
+                } else {
+                    alert("❌ No se encontró la columna 'Código Producto' o está vacía.");
+                }
+            } catch (error) {
+                alert("Error al procesar el archivo Excel: " + error.message);
+            }
+            inputFile.value = ""; // Resetea el input
+        };
+        reader.readAsArrayBuffer(file);
+    });
 
     window.borrarFila = async (id) => {
         const registro = registrosActuales.find(r => r.id === id);
@@ -425,6 +501,40 @@
     });
 
     window.onload = () => inputCod.focus();
+    
+    // Funciones de Voz
+    function reproducirVoz(texto) {
+        if ('speechSynthesis' in window) {
+            const mensaje = new SpeechSynthesisUtterance(texto);
+            mensaje.lang = 'es-ES'; 
+            mensaje.rate = 1.0;
+            mensaje.pitch = 1.1; 
+            
+            const voces = window.speechSynthesis.getVoices();
+            const vozNatural = voces.find(voz => voz.name.includes('Google') && voz.lang.includes('es')) || 
+                               voces.find(voz => (voz.name.includes('Sabina') || voz.name.includes('Helena')) && voz.lang.includes('es')) ||
+                               voces.find(voz => voz.lang.startsWith('es'));
+                               
+            if (vozNatural) {
+                mensaje.voice = vozNatural;
+            }
+            
+            window.speechSynthesis.speak(mensaje);
+        }
+    }
+
+    function alertarCodigoRepetido() {
+        reproducirVoz("Código repetido");
+    }
+
+    function alertarCodigoNoExiste() {
+        reproducirVoz("código incorrecto");
+    }
+
+    // Cargar las voces en segundo plano
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.getVoices();
+    }
 </script>
 
 </body>
