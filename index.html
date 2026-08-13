@@ -262,8 +262,8 @@
                 <tr>
                     <th>CÓDIGO</th>
                     <th>POSICIÓN</th>
-                    <th>FECHA</th>
-                    <th style="text-align: right;">ACCIÓN</th>
+                    <th>ACCIÓN</th>
+                    <th style="text-align: right;">FECHA</th>
                 </tr>
             </thead>
             <tbody id="tablaBody"></tbody>
@@ -366,10 +366,10 @@
                     ${esRepetido ? '<span class="repetido-tag">Repetido</span>' : ''}
                 </td>
                 <td>${data.pos}</td>
-                <td style="font-size: 0.8rem; color: #64748b;">${data.fechaStr || '-'}</td>
-                <td style="text-align: right;">
+                <td>
                     <button class="btn-delete-row" onclick="borrarFila('${data.id}')">Borrar</button>
                 </td>
+                <td style="font-size: 0.8rem; color: #64748b; text-align: right;">${data.fechaStr || '-'}</td>
             `;
             tablaBody.appendChild(tr);
         });
