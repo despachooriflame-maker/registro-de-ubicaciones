@@ -356,6 +356,16 @@
             registrosActuales.push({ ...data, id: docSnap.id });
         });
 
+        // REORDENAMIENTO: Poner los repetidos al inicio de la tabla
+        registrosActuales.sort((a, b) => {
+            const esRepetidoA = codigosList.filter(c => c === a.cod).length > 1;
+            const esRepetidoB = codigosList.filter(c => c === b.cod).length > 1;
+
+            if (esRepetidoA && !esRepetidoB) return -1;
+            if (!esRepetidoA && esRepetidoB) return 1;
+            return 0; // Si ambos son iguales, conserva el orden por fecha
+        });
+
         registrosActuales.forEach((data) => {
             const esRepetido = codigosList.filter(c => c === data.cod).length > 1;
 
