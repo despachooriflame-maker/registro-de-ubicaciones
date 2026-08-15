@@ -133,7 +133,7 @@
         .actions-top { 
             display: flex; 
             gap: 10px; 
-            margin-bottom: 20px; 
+            margin-bottom: 15px; 
         }
         
         .btn {
@@ -156,14 +156,54 @@
             flex: 1;
         }
 
+        /* NUEVO: Estilos para el buscador */
+        .search-container {
+            margin-bottom: 15px;
+        }
+
+        #buscador {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid var(--gris-borde);
+            border-radius: 10px;
+            font-size: 0.9rem;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+            text-transform: none; /* Permitir minúsculas visualmente en el buscador */
+        }
+
+        #buscador:focus {
+            border-color: var(--azul-medio);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        /* MODIFICADO: Contenedor de la tabla con scroll vertical */
         .table-container {
             width: 100%;
             overflow-x: auto;
+            max-height: 350px; /* Limita la altura para generar el scroll */
+            overflow-y: auto;  /* Activa el scroll vertical */
             -webkit-overflow-scrolling: touch;
+            border: 1px solid var(--gris-borde);
+            border-radius: 8px;
         }
 
-        table { width: 100%; margin-top: 10px; border-collapse: collapse; min-width: 400px; }
-        th { text-align: left; font-size: 0.75rem; color: var(--azul-medio); border-bottom: 2px solid var(--azul-claro); padding: 10px; }
+        table { width: 100%; border-collapse: collapse; min-width: 400px; }
+        
+        /* MODIFICADO: Cabecera fija para que no se pierda al hacer scroll */
+        th { 
+            text-align: left; 
+            font-size: 0.75rem; 
+            color: var(--azul-medio); 
+            border-bottom: 2px solid var(--azul-claro); 
+            padding: 10px; 
+            position: sticky; 
+            top: 0; 
+            background: var(--blanco); 
+            z-index: 10;
+        }
+        
         td { padding: 12px 10px; border-bottom: 1px solid #f1f5f9; font-size: 0.90rem; }
         
         .btn-delete-row { 
@@ -207,6 +247,7 @@
             body { padding: 30px; }
             .card { padding: 2rem; }
             h2 { font-size: 1.6rem; }
+            .table-container { max-height: 450px; } /* Más alto en pantallas grandes */
         }
     </style>
 </head>
@@ -255,6 +296,11 @@
         <button class="btn btn-clear" id="btnLimpiar">LIMPIAR</button>
     </div>
     <input type="file" id="inputFile" accept=".xlsx, .xls" style="display: none;">
+
+    <!-- NUEVO: Contenedor del Buscador -->
+    <div class="search-container">
+        <input type="text" id="buscador" placeholder="🔍 Buscar por código o posición..." autocomplete="off">
+    </div>
 
     <div class="table-container">
         <table>
@@ -308,6 +354,7 @@
     const menuUbicaciones = document.getElementById('menuUbicaciones');
     const tablaBody = document.getElementById('tablaBody');
     const inputFile = document.getElementById('inputFile');
+    const inputBuscador = document.getElementById('buscador'); // NUEVO: Ref al buscador
     
     let registrosActuales = [];
     let codigosBase = []; // Aquí se guardan los códigos válidos en tiempo real
@@ -383,6 +430,9 @@
             `;
             tablaBody.appendChild(tr);
         });
+
+        // NUEVO: Re-aplicar el filtro del buscador si se actualiza la base de datos
+        inputBuscador.dispatchEvent(new Event('input'));
     });
 
     async function registrar() {
@@ -499,6 +549,24 @@
             alert("📋 Tabla copiada.");
         });
     };
+
+    // NUEVO: Evento para filtrar la tabla con el buscador
+    inputBuscador.addEventListener('input', (e) => {
+        const termino = e.target.value.toLowerCase();
+        const filas = tablaBody.getElementsByTagName('tr');
+        
+        Array.from(filas).forEach(fila => {
+            // Evaluamos la celda de Código (índice 0) y Posición (índice 1)
+            const textoCodigo = fila.cells[0].textContent.toLowerCase();
+            const textoPosicion = fila.cells[1].textContent.toLowerCase();
+            
+            if (textoCodigo.includes(termino) || textoPosicion.includes(termino)) {
+                fila.style.display = '';
+            } else {
+                fila.style.display = 'none';
+            }
+        });
+    });
 
     inputCod.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && inputCod.value.trim() !== "") {
