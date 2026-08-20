@@ -89,8 +89,8 @@
 
         table { 
             width: 100%; 
-            max-width: 800px; /* Evita que las columnas se separen demasiado */
-            margin: 5px auto; /* Centra la tabla */
+            max-width: 800px; 
+            margin: 5px auto; 
             border-collapse: collapse; 
             min-width: 320px; 
         }
@@ -107,17 +107,17 @@
         }
 
         td { 
-            padding: 8px 6px; /* Menos espaciado interior */
+            padding: 8px 6px; 
             border-bottom: 1px solid #f1f5f9; 
             font-size: 0.85rem; 
             vertical-align: middle;
         }
 
-        /* Alineación central para que no esté tan espaciado */
-        th:nth-child(1), td:nth-child(1) { text-align: left; }
-        th:nth-child(2), td:nth-child(2) { text-align: center; }
+        th:nth-child(1), td:nth-child(1) { text-align: center; width: 40px; }
+        th:nth-child(2), td:nth-child(2) { text-align: left; }
         th:nth-child(3), td:nth-child(3) { text-align: center; }
-        th:nth-child(4), td:nth-child(4) { text-align: right; }
+        th:nth-child(4), td:nth-child(4) { text-align: center; }
+        th:nth-child(5), td:nth-child(5) { text-align: right; }
         
         tr:hover td {
             background-color: #f8fafc;
@@ -161,19 +161,37 @@
             font-size: 0.75rem;
             cursor: pointer;
             transition: all 0.2s;
-            width: 125px; /* Ancho estático para evitar el error de animación / salto de fila */
+            width: 125px; 
             min-width: 125px; 
             text-align: center;
             box-sizing: border-box;
             display: inline-block;
-            white-space: nowrap; /* Evita que el texto se rompa en dos líneas */
+            white-space: nowrap; 
         }
 
         .btn-movido:hover {
             background: var(--azul-fuerte);
         }
 
-        /* Estado Movido */
+        .btn-eliminar {
+            background: #fee2e2;
+            color: var(--rojo-error);
+            border: 1px solid #fca5a5;
+            padding: 5px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-eliminar:hover {
+            background: var(--rojo-error);
+            color: white;
+        }
+
         tr.is-moved td {
             opacity: 0.6;
             background-color: #f8fafc;
@@ -206,7 +224,6 @@
             height: 14px;
         }
 
-        /* Adaptabilidad para Móviles */
         @media (max-width: 600px) {
             .header {
                 flex-direction: column;
@@ -225,6 +242,7 @@
                 font-size: 0.65rem; 
             }
             .loc-lectura { padding: 2px 4px; font-size: 0.70rem; }
+            .btn-eliminar { padding: 4px 6px; font-size: 0.75rem; }
         }
     </style>
 </head>
@@ -243,6 +261,7 @@
         <table>
             <thead>
                 <tr>
+                    <th style="width: 40px; text-align: center;">🗑️</th>
                     <th>CÓDIGO</th>
                     <th>POSICIÓN ACTUAL</th>
                     <th>MOVER AL PICKING</th>
@@ -250,40 +269,35 @@
                 </tr>
             </thead>
             <tbody id="tablaBody">
-                <tr><td colspan="4" class="loader">Conectando con las bases de datos...</td></tr>
+                <tr><td colspan="5" class="loader">Conectando con las bases de datos...</td></tr>
             </tbody>
         </table>
     </div>
 </div>
 
-<!-- Firebase Scripts (Versión 10 Modular) - Lógica intacta -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getFirestore, collection, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    // 1. Configuración de Firebase (Registro - Firestore)
     const configRegistro = {
         apiKey: "AIzaSyBDTUUcNv0YYEE0U_TqpyEAuqn9TV9kFqo",
         authDomain: "ubicaciones-6afcd.firebaseapp.com",
         projectId: "ubicaciones-6afcd"
     };
 
-    // 2. Configuración de Firebase (Lecturas 1 - Realtime Database)
     const configLecturas1 = {
         apiKey: "AIzaSyClp2tVcoeIE_ZOedIzP6zyEXEoP9Em0tM",
         databaseURL: "https://chatpareja-3fbce-default-rtdb.firebaseio.com",
         projectId: "chatpareja-3fbce"
     };
 
-    // 3. Configuración de Firebase (Lecturas 2 - Realtime Database)
     const configLecturas2 = {
         apiKey: "AIzaSyAENxoHkiH5XrW5iOYJl9ci_w8SSYoLw3s",
         databaseURL: "https://verproductos-40224-default-rtdb.firebaseio.com",
         projectId: "verproductos-40224"
     };
 
-    // Inicializar Apps
     const appRegistro = initializeApp(configRegistro, "appRegistro");
     const appLecturas1 = initializeApp(configLecturas1, "appLecturas1");
     const appLecturas2 = initializeApp(configLecturas2, "appLecturas2");
@@ -293,6 +307,7 @@
     const dbRT2 = getDatabase(appLecturas2);
 
     let dataRegistro = {}; 
+    let docIdsRegistro = {}; 
     let datosRT1 = {};     
     let datosRT2 = {};     
     let dataLecturas = {}; 
@@ -325,28 +340,43 @@
         procesarLecturas();
 
         const codigosRegistro = Object.keys(dataRegistro);
-        const codigosConectados = codigosRegistro.filter(cod => dataLecturas[cod] && dataLecturas[cod].size > 0);
+        let codigosConectados = codigosRegistro.filter(cod => dataLecturas[cod] && dataLecturas[cod].size > 0);
+
+        codigosConectados.sort((a, b) => {
+            const posA = String((dataRegistro[a] || []).join(', '));
+            const posB = String((dataRegistro[b] || []).join(', '));
+            return posA.localeCompare(posB, undefined, { numeric: true, sensitivity: 'base' });
+        });
 
         if (codigosConectados.length === 0) {
-            tablaBody.innerHTML = '<tr><td colspan="4" class="loader">No hay códigos coincidentes entre Registro y Lecturas.</td></tr>';
-            actualizarContadores(0);
+            tablaBody.innerHTML = '<tr><td colspan="5" class="loader">No hay códigos coincidentes entre Registro y Lecturas.</td></tr>';
+            actualizarContadores(0, 0); 
             return;
         }
 
         tablaBody.innerHTML = '';
         let pendientes = 0;
+        let movidosVisibles = 0; 
 
         codigosConectados.forEach(cod => {
-            const posicionActual = dataRegistro[cod];
+            // Unimos todas las posiciones registradas con un separador
+            const posicionActual = dataRegistro[cod].join(' - '); 
             const moverA = [...dataLecturas[cod]].join(', ');
             const estaMovido = movidosLocales.has(cod);
 
-            if (!estaMovido) pendientes++;
+            if (!estaMovido) {
+                pendientes++;
+            } else {
+                movidosVisibles++; 
+            }
 
             const tr = document.createElement('tr');
             if (estaMovido) tr.classList.add('is-moved');
             
             tr.innerHTML = `
+                <td style="text-align: center;">
+                    <button class="btn-eliminar" onclick="eliminarRegistroIndividual('${cod}')" title="Eliminar de Firestore">🗑️</button>
+                </td>
                 <td><span class="code-cell">${cod}</span></td>
                 <td>
                     <span class="loc-registro">
@@ -371,13 +401,42 @@
             tablaBody.appendChild(tr);
         });
 
-        actualizarContadores(pendientes);
+        actualizarContadores(pendientes, movidosVisibles); 
     }
 
-    function actualizarContadores(pendientes) {
+    function actualizarContadores(pendientes, movidosVisibles) {
         pendientesCount.textContent = `Pendientes: ${pendientes}`;
-        movidosCount.textContent = `Movidos: ${movidosLocales.size}`;
+        movidosCount.textContent = `Movidos: ${movidosVisibles}`; 
     }
+
+    window.eliminarRegistroIndividual = async (cod) => {
+        const password = prompt(`Va a eliminar el código ${cod} del Registro de Ubicación.\nIngrese la contraseña de seguridad:`);
+        
+        if (password === "Oriflame2026") {
+            try {
+                const docIds = docIdsRegistro[cod];
+                if (docIds && docIds.length > 0) {
+                    // Mapear todas las promesas de eliminación si hay múltiples registros del mismo código
+                    const deletePromises = docIds.map(id => deleteDoc(doc(dbFirestore, "registros", id)));
+                    await Promise.all(deletePromises);
+                    
+                    if (movidosLocales.has(cod)) {
+                        movidosLocales.delete(cod);
+                        localStorage.setItem('movidos_estado', JSON.stringify([...movidosLocales]));
+                        set(ref(dbRT1, 'picking_live/movidos_sincronizados'), [...movidosLocales]);
+                    }
+
+                    alert(`✅ Código ${cod} eliminado correctamente del registro.`);
+                } else {
+                    alert("❌ Error: No se encontró el documento para este código en la base de datos.");
+                }
+            } catch (error) {
+                alert("❌ Error al eliminar el registro: " + error.message);
+            }
+        } else if (password !== null) {
+            alert("❌ Contraseña incorrecta. Operación cancelada.");
+        }
+    };
 
     window.toggleMovido = (cod) => {
         if (movidosLocales.has(cod)) {
@@ -386,17 +445,49 @@
             movidosLocales.add(cod); 
         }
         localStorage.setItem('movidos_estado', JSON.stringify([...movidosLocales]));
+        
+        set(ref(dbRT1, 'picking_live/movidos_sincronizados'), [...movidosLocales]);
+        
         renderTable(); 
     };
 
     onSnapshot(collection(dbFirestore, "registros"), (snapshot) => {
         dataRegistro = {};
+        docIdsRegistro = {}; 
         snapshot.forEach(docSnap => {
             const data = docSnap.data();
             if (data.cod) {
-                dataRegistro[data.cod] = data.pos;
+                // Se preparan arreglos para guardar múltiples ubicaciones de un mismo código
+                if (!dataRegistro[data.cod]) {
+                    dataRegistro[data.cod] = [];
+                    docIdsRegistro[data.cod] = [];
+                }
+                
+                // Evita mostrar posiciones duplicadas visualmente si registraron la misma dos veces
+                if (!dataRegistro[data.cod].includes(data.pos)) {
+                    dataRegistro[data.cod].push(data.pos);
+                }
+                
+                // Guarda todos los IDs para poder eliminarlos completamente si se requiere
+                docIdsRegistro[data.cod].push(docSnap.id); 
             }
         });
+
+        let necesitaLimpieza = false;
+        const movidosArray = [...movidosLocales]; 
+        
+        movidosArray.forEach(cod => {
+            if (!dataRegistro[cod] || dataRegistro[cod].length === 0) { 
+                movidosLocales.delete(cod);
+                necesitaLimpieza = true;
+            }
+        });
+
+        if (necesitaLimpieza) {
+            localStorage.setItem('movidos_estado', JSON.stringify([...movidosLocales]));
+            set(ref(dbRT1, 'picking_live/movidos_sincronizados'), [...movidosLocales]);
+        }
+
         renderTable();
     });
 
@@ -407,6 +498,16 @@
 
     onValue(ref(dbRT2, 'picking_live/stationsData'), (snapshot) => {
         datosRT2 = snapshot.val() || {};
+        renderTable();
+    });
+
+    onValue(ref(dbRT1, 'picking_live/movidos_sincronizados'), (snapshot) => {
+        if (snapshot.exists()) {
+            movidosLocales = new Set(snapshot.val());
+        } else {
+            movidosLocales = new Set(); 
+        }
+        localStorage.setItem('movidos_estado', JSON.stringify([...movidosLocales]));
         renderTable();
     });
 </script>
